@@ -81,4 +81,53 @@ router.patch("/:id/complete", verifyToken, async (req, res) => {
   }
 });
 
+
+// 🔸 GET /api/help/nearby — Get Requests Near Me (excluding user's own)
+router.get("/nearby", verifyToken, async (req, res) => {
+  const { lng, lat } = req.query;
+  try {
+    const nearbyRequests = await HelpRequest.find({
+      status: "pending",
+      requesterId: { $ne: req.user.id }, // ✅ Exclude logged-in user
+      location: {
+        $near: {
+          $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+          $maxDistance: 5000, // 5 km range
+        },
+      },
+    }).populate("requesterId", "name email");
+
+    res.json(nearbyRequests);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching nearby help requests" });
+  }
+});
+
+// 🔸 GET /api/help/my-requests — Get requests created by logged-in user
+router.get("/my-requests", verifyToken, async (req, res) => {
+  try {
+    const myRequests = await HelpRequest.find({
+      requesterId: req.user.id, // 🔸 Use `req.user.id`
+    }).sort({ createdAt: -1 });
+
+    res.json(myRequests);
+  } catch (err) {
+    console.error("Error in /my-requests:", err);
+    res.status(500).json({ message: "Error fetching your help requests" });
+  }
+});
+
+// 🔸 GET /api/help/my-requests — Fetch requests created by logged-in user
+router.get("/my-requests", verifyToken, async (req, res) => {
+  try {
+    const requests = await HelpRequest.find({ requesterId: req.user.id }).sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching your help requests" });
+  }
+});
+
+
+
+
 module.exports = router;

@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import HelpForm from "../components/HelpForm";
 import HelpCard from "../components/HelpCard";
 import Navbar from "../components/Navbar";
 import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Dashboard() {
+  const { user } = useContext(AuthContext);
   const [nearby, setNearby] = useState([]);
 
   const fetchNearby = async () => {
@@ -12,7 +14,10 @@ export default function Dashboard() {
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/api/help/nearby?lng=77.5946&lat=12.9716`
       );
-      setNearby(res.data);
+      const filtered = res.data.filter(
+        (request) => request.requesterId?._id !== user?._id
+      );
+      setNearby(filtered);
     } catch (err) {
       console.error("Error fetching nearby requests", err);
     }

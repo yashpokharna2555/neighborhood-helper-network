@@ -5,6 +5,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import React from "react";
 import { Toaster } from "react-hot-toast";
+import MyRequests from "./pages/MyRequests";
+
 
 function App() {
   return (
@@ -19,6 +21,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-requests"
+            element={
+              <ProtectedRoute>
+                <MyRequests />
               </ProtectedRoute>
             }
           />
