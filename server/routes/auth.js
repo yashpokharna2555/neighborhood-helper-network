@@ -6,22 +6,34 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-// POST /register
+
+
+// POST /api/auth/register
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, coordinates } = req.body;
   try {
     const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: "Email already registered" });
+    if (existing) return res.status(400).json({ message: "Email already in use" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
-    await newUser.save();
 
-    res.status(201).json({ message: "User registered" });
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      location: {
+        type: "Point",
+        coordinates: coordinates || [0, 0], // fallback if not provided
+      },
+    });
+
+    await user.save();
+    res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Registration failed" });
   }
 });
+
 
 // POST /login
 router.post("/login", async (req, res) => {
@@ -42,5 +54,17 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+
+router.get("/profile", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch profile" });
+  }
+});
+
 
 module.exports = router;

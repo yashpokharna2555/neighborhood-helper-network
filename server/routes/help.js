@@ -84,24 +84,37 @@ router.patch("/:id/complete", verifyToken, async (req, res) => {
 
 // 🔸 GET /api/help/nearby — Get Requests Near Me (excluding user's own)
 router.get("/nearby", verifyToken, async (req, res) => {
-  const { lng, lat } = req.query;
   try {
+    let lng = parseFloat(req.query.lng);
+    let lat = parseFloat(req.query.lat);
+
+    // If not passed, fallback to user's profile location
+    if (!lng || !lat) {
+      const user = await require("../models/User").findById(req.user.id);
+      if (!user || !user.location?.coordinates?.length) {
+        return res.status(400).json({ message: "No location available" });
+      }
+      [lng, lat] = user.location.coordinates;
+    }
+
     const nearbyRequests = await HelpRequest.find({
       status: "pending",
-      requesterId: { $ne: req.user.id }, // ✅ Exclude logged-in user
+      requesterId: { $ne: req.user.id },
       location: {
         $near: {
-          $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
-          $maxDistance: 5000, // 5 km range
+          $geometry: { type: "Point", coordinates: [lng, lat] },
+          $maxDistance: 5000,
         },
       },
     }).populate("requesterId", "name email");
 
     res.json(nearbyRequests);
   } catch (err) {
+    console.error("Nearby error:", err);
     res.status(500).json({ message: "Error fetching nearby help requests" });
   }
 });
+
 
 // 🔸 GET /api/help/my-requests — Get requests created by logged-in user
 router.get("/my-requests", verifyToken, async (req, res) => {

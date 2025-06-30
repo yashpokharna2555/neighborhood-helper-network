@@ -12,21 +12,39 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/register`, {
-        name, email, password
-      });
-      // Auto-login after registration
-      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, {
-        email, password
-      });
-      setUser(res.data.user);
-      setToken(res.data.token);
-      localStorage.setItem("token", res.data.token);
-      navigate("/dashboard");
-    } catch (err) {
-      alert("Registration failed");
-    }
+
+    // Try to get user location
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { longitude, latitude } = pos.coords;
+
+        try {
+          await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/register`, {
+            name,
+            email,
+            password,
+            coordinates: [longitude, latitude],
+          });
+
+          // Auto-login
+          const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, {
+            email,
+            password,
+          });
+
+          setUser(res.data.user);
+          setToken(res.data.token);
+          localStorage.setItem("token", res.data.token);
+          navigate("/dashboard");
+        } catch (err) {
+          alert("Registration failed");
+        }
+      },
+      (err) => {
+        console.error("Geolocation error", err);
+        alert("Please enable location access to register.");
+      }
+    );
   };
 
   return (
@@ -66,7 +84,8 @@ export default function Register() {
           </button>
         </form>
         <p className="text-sm text-center mt-4">
-          Already have an account? <a href="/login" className="text-teal-600 font-medium">Login</a>
+          Already have an account?{" "}
+          <a href="/login" className="text-teal-600 font-medium">Login</a>
         </p>
       </div>
     </div>
