@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const verifyToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -57,14 +58,23 @@ router.post("/login", async (req, res) => {
 
 
 
+// GET /api/auth/profile
 router.get("/profile", verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch profile" });
-  }
+  const user = await User.findById(req.user.id).select("-password");
+  res.json(user);
 });
+
+// PATCH /api/auth/update-location
+router.patch("/update-location", verifyToken, async (req, res) => {
+  const { coordinates } = req.body;
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { location: { type: "Point", coordinates } },
+    { new: true }
+  );
+  res.json({ location: user.location });
+});
+
 
 
 module.exports = router;

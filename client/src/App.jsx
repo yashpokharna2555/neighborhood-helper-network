@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import React from "react";
 import { Toaster } from "react-hot-toast";
 import MyRequests from "./pages/MyRequests";
+import Profile from "./pages/Profile";
 
 
 function App() {
@@ -33,6 +34,14 @@ function App() {
             }
           />
           <Route path="*" element={<Navigate to="/login" />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>

@@ -50,6 +50,13 @@ export default function Navbar() {
                 >
                     {darkMode ? <Sun size={22} /> : <Moon size={22} />}
                 </button>
+                <Link
+                    to="/profile"
+                    className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+                >
+                    Profile
+                </Link>
+
 
                 {token && (
                     <button
