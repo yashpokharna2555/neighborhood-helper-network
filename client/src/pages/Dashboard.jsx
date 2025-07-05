@@ -4,6 +4,7 @@ import HelpCard from "../components/HelpCard";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import socket from "../socket"; // 👈 socket client
 
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
@@ -25,6 +26,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchNearby();
+
+    // ✅ Listen for socket connection
+    socket.on("connect", () => {
+      console.log("✅ Connected to socket:", socket.id);
+    });
+
+    // Optional: show disconnection
+    socket.on("disconnect", () => {
+      console.log("❌ Disconnected from socket");
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+    };
   }, []);
 
   return (
